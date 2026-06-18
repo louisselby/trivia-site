@@ -1,24 +1,23 @@
-import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
+  const { default: OpenAI } = await import("openai");
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
   const { text, voice } = await req.json();
 
   if (!text?.trim()) {
     return NextResponse.json({ error: "No text provided" }, { status: 400 });
   }
 
-  // OpenAI TTS max is 4096 chars per request — chunk if needed
   const CHUNK_SIZE = 4000;
   const chunks: string[] = [];
 
   if (text.length <= CHUNK_SIZE) {
     chunks.push(text);
   } else {
-    // Split on sentence boundaries
     const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
     let current = "";
     for (const sentence of sentences) {
